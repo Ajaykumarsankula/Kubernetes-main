@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nodejs-probes-healthy
+  labels:
+    app: nodejs-probes
+spec:
+  containers:
+  - name: nodejs-app
+    image: 805187821880.dkr.ecr.us-east-1.amazonaws.com/python  # Make sure server.js is included in the image
+    command: ["node", "server.js"]
+    ports:
+      - containerPort: 3000
+
+    # Liveness probe → always healthy
+    livenessProbe:
+      httpGet:
+        path: /healthz
+        port: 3000
+      initialDelaySeconds: 2
+      periodSeconds: 5
+      failureThreshold: 3
+
+    # Readiness probe → always ready
+    readinessProbe:
+      httpGet:
+        path: /ready
+        port: 3000
+      initialDelaySeconds: 2
+      periodSeconds: 5
+      failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nodejs-probes-svc
+spec:
+  selector:
+    app: nodejs-probes
+  type: NodePort
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 31000
+
